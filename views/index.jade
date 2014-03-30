@@ -1,0 +1,162 @@
+doctype html
+html
+	head
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		script(src="https://sdk.amazonaws.com/js/aws-sdk-2.0.0-rc9.min.js")
+		script(src="/javascripts/Math.uuid.js")
+		script(src="#{player}" type='text/javascript')
+		script(src="http://code.jquery.com/jquery-1.11.0.min.js")
+		script(src="http://code.jquery.com/jquery-migrate-1.2.1.min.js")
+		script(src="/javascripts/bootstrap.js" type="text/javascript")
+		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+		link(href="/stylesheets/flat-ui.css" rel="stylesheet")
+		title #{title}
+	
+	body(style='background-color: #1abc9c;')
+		.container
+			.login-screen
+				h1 Welcome To ViChat
+				.login-form
+					h4 Please Log In
+					div.visible-md.visible-lg 
+						fb:login-button(show-faces="false" width="1000" top="200" max-rows="1" auto_logout_link="true" data-size='xlarge' scope="basic_info,email") Log In with Facebook
+					div.visible-xs.visible-sm 
+						fb:login-button(show-faces="false" width="1000" top="200" max-rows="1" auto_logout_link="true" data-size='large' scope="basic_info,email") Log In with Facebook
+
+		- if (messages.info)
+			center
+				.message.info
+					span= messages.info
+		p#browser
+		div#fb-root
+		script(src="#{player}" type='text/javascript')
+		script.
+			window.fbAsyncInit = function() {
+				FB.init({
+					appId      : '275756625921797',
+					status     : true, // check login status
+					cookie     : true, // enable cookies to allow the server to access the session
+					xfbml      : true  // parse XFBML
+					});
+
+				FB.Event.subscribe('auth.authResponseChange', function(stresponse) {
+					if (stresponse.status === 'connected') {
+						FB.api(
+								"/me/picture",
+								{
+									"height": '20',
+									"width": '20',
+									"type":	'square',
+								},
+								function (picresponse) {
+									if (picresponse && !picresponse.error) {
+										var fbimg = document.getElementById('fbimg');
+										fbimg.value=picresponse.data.url;
+										FB.api("/me",function (response) {
+											console.log(response.error);
+											if (response && !response.error) {
+												console.log(response);
+												var fbid = document.getElementById('fbid');
+												fbid.value=response.id;
+												var fbname = document.getElementById('fbname');
+												fbname.value=response.name;
+												document.getElementById('loginform').submit();
+												}
+										});
+									}
+								}
+						);
+					}else {
+						console.log("I am here");
+						window.location='/logout';}});
+					};
+
+			(function(d){
+				var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+				if (d.getElementById(id)) {return;}
+				js = d.createElement('script'); js.id = id; js.async = true;
+				js.src = "//connect.facebook.net/en_US/all.js";
+				ref.parentNode.insertBefore(js, ref);}(document));
+
+			function testAPI() {
+				console.log('Welcome!  Fetching your information.... ');
+				FB.api('/me', function(response) {
+					console.log('Good to see you, ' + response.name + '.');});}
+		
+		form#loginform(name="input" action="/login" method="post")
+			input#fbid(type="hidden" name="facebookid" value='')
+			input#fbname(type="hidden" name="facebookname" value='')
+			input#fbimg(type="hidden" name="facebookimg" value='')
+			input#mtype(type="hidden" name="mobiletype" value='')
+		center
+			div
+				div#mediaplayer
+		script(type='text/javascript')
+		script.
+			//document.getElementById('browser').innerHTML=navigator.userAgent.toLowerCase();
+			function is_mobile_func() {  
+			var sUserAgent = navigator.userAgent.toLowerCase();  
+			var bIsIpad = sUserAgent.match(/ipad/i) == "ipad";  
+			var bIsIphoneOs = sUserAgent.match(/iphone os/i) == "iphone os";  
+			var bIsMidp = sUserAgent.match(/midp/i) == "midp";  
+			var bIsUc7 = sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4";  
+			var bIsUc = sUserAgent.match(/ucweb/i) == "ucweb";  
+			var bIsAndroid = sUserAgent.match(/android/i) == "android";  
+			var bIsCE = sUserAgent.match(/windows ce/i) == "windows ce";  
+			var bIsWM = sUserAgent.match(/windows mobile/i) == "windows mobile";  
+			if (bIsIpad) {  
+				is_mobile=2;
+			}else if(bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM) {
+				is_mobile=1;
+			}else{
+				is_mobile=0;
+			}} 
+			is_mobile_func();
+			var mtype = document.getElementById('mtype');
+			mtype.value=is_mobile;
+			/*
+			if(is_mobile==1){
+				jwplayer('mediaplayer').setup({
+					width: "640",
+					height: "480",
+					primary: "html5",
+					playlist: [{
+						image: "#{logo}",
+						sources: [
+							{ file: "#{bucket}test.mp4", label: "cloudFront" },
+							{ file: "#{bbucket}test.mp4", label: "s3 backup" }
+						],
+						title: "Welcome To Vichat"
+					}]
+				});
+			}else if(is_mobile==2){
+				jwplayer('mediaplayer').setup({
+					width: "720",
+					height: "640",
+					primary: "html5",
+					playlist: [{
+						image: "#{logo}",
+						sources: [
+							{ file: "#{bucket}test.mp4", label: "cloudFront" },
+							{ file: "#{bbucket}test.mp4", label: "s3 backup" }
+						],
+						title: "Welcome To Vichat"
+					}]
+				});
+			}else{
+				jwplayer('mediaplayer').setup({
+					width: "1024",
+					height: "768",
+					primary: "html5",
+					playlist: [{
+						image: "#{logo}",
+						sources: [
+							{ file: "#{bucket}test.mp4", label: "cloudFront" },
+							{ file: "#{bbucket}test.mp4", label: "s3 backup" }
+						],
+						title: "Welcome To Vichat"
+					}]
+				});
+			}
+			*/

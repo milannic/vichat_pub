@@ -1,0 +1,125 @@
+doctype html
+html
+	include includes/header
+	body
+		input(id="rptid" type="hidden" value='#{tdata[0].key.S}')
+		include includes/navigation
+		.container
+			.row
+				.col-md-12
+					- var tdate = tdata[0].time.N
+					h2 #{tdata[0].title.S}
+					div.visible-md.visible-lg
+						div#topicvideo
+					div.visible-xs.visible-sm
+						div#topicvideo-mobile
+					script.
+						jwplayer('topicvideo').setup({
+							width: "940",
+							height: "528",
+							primary: "html5",
+							playlist: [{
+								image: "#{bbucket}#{tdata[0].key.S}-00001.png",
+								sources: [
+									{ file: "#{bucket}#{tdata[0].key.S}.mp4",label: "origin"},
+									{ file: "#{bbucket}#{tdata[0].key.S}.mp4",label: "backup"},
+								],
+								title: "#{tdata[0].title.S}"
+							}]
+						});
+					script.
+						jwplayer('topicvideo-mobile').setup({
+							width: "300",
+							height: "168",
+							primary: "html5",
+							playlist: [{
+								image: "#{bbucket}#{tdata[0].key.S}-00001.png",
+								sources: [
+									{ file: "#{bucket}#{tdata[0].key.S}.mp4",label: "origin"},
+									{ file: "#{bbucket}#{tdata[0].key.S}.mp4",label: "backup"},
+								],
+								title: "#{tdata[0].title.S}"
+							}]
+						});
+
+					ul.list-inline
+						li <img id='topicposterprofile' src=''></img>
+						li
+							ul.list-unstyled
+								li <a href="/u/#{tdata[0].userID.S}"> #{tdata[0].username.S} </a> 
+								li 
+									ul.list-inline 
+										-if(tdata[0].replycnt.N < 2) {
+											li #{tdata[0].replycnt.N} reply
+										-}
+										-else {
+											li #{tdata[0].replycnt.N} replies
+										-}
+										li.pull-right Published on #{tdata[0].time.N[1]}/#{tdata[0].time.N[2]}/#{tdata[0].time.N[0]} #{tdata[0].time.N[3]}:#{tdata[0].time.N[4]}:#{tdata[0].time.N[5]} 
+					button(class="btn btn-primary" onclick='reply()') Reply 
+				
+					-var timeout = 1000;
+					script.
+						setTimeout("loadusertopic()",#{timeout});
+						function loadusertopic(){
+							FB.api(
+								"/#{tdata[0].userID.S}/picture",
+								{
+									"height": '30',
+									"width": '30',
+									"type":	'square',
+								},
+								function (response) {
+									console.log(#{index});
+									console.log(response);
+									if (response && !response.error) {
+										console.log(response.data.url);
+										document.getElementById('topicposterprofile').src=response.data.url;
+									}
+								}
+							);
+						}
+					
+					form#pubreply(name="input" action="/reply" method="post")
+						input#rtopicid(type="hidden" name="topic" value='')
+					script.
+						function reply(){
+							document.getElementById('rtopicid').value=document.getElementById('rptid').value;
+							document.getElementById('pubreply').submit();
+						}
+
+			hr
+
+			h3 Comments
+
+			each element,index in rdata 
+				-if(index % 2 == 0) {
+					<div class="row">
+				-}
+				.col-md-6
+					div(id="reply#{index}" style="display:inline float:left")
+					script.
+						jwplayer('reply#{index}').setup({
+							width: "300",
+							height: "168",
+							primary: "html5",
+							playlist: [{
+								image: "#{bbucket}#{element.key.S}-00001.png",
+								sources: [
+									{ file: "#{bucket}#{element.key.S}.mp4",label: "origin"},
+									{ file: "#{bbucket}#{element.key.S}.mp4",label: "backup"},
+								],
+								title: "#{tdata[0].title.S}'s No. #{index+1} reply",
+							}]
+						});
+					ul.list-inline
+						li by <a href="/u/#{element.userID.S}"> #{element.username.S} </a> 
+						li #{element.time.N[1]}/#{element.time.N[2]}/#{element.time.N[0]} #{element.time.N[3]}:#{element.time.N[4]}:#{element.time.N[5]}					
+				-if(index % 2 == 1) {
+					</div>
+				-}
+			-if(rdata.length % 2 != 0) {
+					</div>
+			-}
+			//include includes/delete
+			include includes/footer

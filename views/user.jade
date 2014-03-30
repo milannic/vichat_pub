@@ -1,0 +1,115 @@
+doctype html
+html
+	include includes/header
+	body
+		include includes/navigation
+		.container
+			ul.list-inline
+				li <img id='userprofilepic' src=''></img> 
+				li
+					h1 #{username}
+			-var timeout = 1000;
+			script.
+				setTimeout("loadusertopic()",#{timeout});
+				function loadusertopic(){
+					FB.api(
+						"/#{userid}/picture",
+						{
+							"height": '60',
+							"width": '60',
+							"type":	'square',
+						},
+						function (response) {
+							console.log(#{index});
+							console.log(response);
+							if (response && !response.error) {
+								//console.log(response.data.url);
+								document.getElementById('userprofilepic').src=response.data.url;
+							}
+						}
+					);
+				}
+			if topics.length!=0
+				h2 Topics
+				each element,index in topics 
+					-if(index%3 == 0) {
+						<div class="row">
+					-}
+					.col-md-4
+						h2 <a href="/t/#{element.key.S}">#{element.title.S}</a>
+						div(id="topic#{index}" style="display:inline float:left")
+						script.
+							jwplayer('topic#{index}').setup({
+								width: "300",
+								height: "168",
+								primary: "html5",
+								playlist: [{
+									image: "#{bbucket}#{element.key.S}-00001.png",
+									sources: [
+										{ file: "#{bucket}#{element.key.S}.mp4",label: "origin"},
+										{ file: "#{bbucket}#{element.key.S}.mp4",label: "backup"},
+									],
+									title: "#{element.title.S}"
+								}]
+							});
+						ul.list-inline
+							-if(element.replycnt.N < 2) {
+								li #{element.replycnt.N} reply
+							-}
+							-else {
+								li #{element.replycnt.N} replies
+							-}
+							li #{element.time.N[1]}/#{element.time.N[2]} #{element.time.N[3]}:#{element.time.N[4]}:#{element.time.N[5]}  #{element.time.N[0]}
+						if cuser.id==element.userID.S
+							input(id="topic#{index}tid" type="hidden" value='#{element.key.S}')
+							input(id="topic#{index}tname" type="hidden" value='#{element.title.S}')
+							input(id="topic#{index}sns" type="hidden" value='#{element.sns.S}')
+							button(class="btn btn-primary" onclick='deltopic(document.getElementById(\'topic#{index}tid\').value,document.getElementById(\'topic#{index}tname\').value,document.getElementById(\'topic#{index}sns\').value)') Delete
+						
+					-if(index % 3 == 2) {
+						</div>
+						-}
+				-if(topics.length % 3 != 0) {
+					</div>
+				-}
+			hr
+
+			if replies.length!=0
+				h2 Replies
+				each element,index in replies 
+					-if(index%3 == 0) {
+						<div class="row">
+					-}
+					.col-md-4
+						div(id="reply#{index}" style="display:inline float:left")
+						script.
+							jwplayer('reply#{index}').setup({
+								width: "300",
+								height: "168",
+								primary: "html5",
+								playlist: [{
+									image: "#{bbucket}#{element.key.S}-00001.png",
+									sources: [
+										{ file: "#{bucket}#{element.key.S}.mp4",label: "origin"},
+										{ file: "#{bbucket}#{element.key.S}.mp4",label: "backup"},
+									],
+									title: "#{username}'s No #{index+1} reply",
+								}]
+							});
+						ul.list-inline
+							li #{element.time.N[1]}/#{element.time.N[2]} #{element.time.N[3]}:#{element.time.N[4]}:#{element.time.N[5]}  #{element.time.N[0]}
+						h4 <a href="/t/#{element.topic.S}"> Go To Topic Page </a>
+						if cuser.id==element.userID.S
+							input(id="reply#{index}rid" type="hidden" value='#{element.key.S}')
+							input(id="reply#{index}tid" type="hidden" value='#{element.topic.S}')
+							button(class="btn btn-primary" onclick='delreply(document.getElementById(\'reply#{index}tid\').value,document.getElementById(\'reply#{index}rid\').value)') Delete	
+					-if(index % 3 == 2) {
+						</div>
+					-}
+				-if(replies.length % 3 != 0) {
+					</div>
+				-}
+			include includes/delete
+			include includes/footer
+			
+

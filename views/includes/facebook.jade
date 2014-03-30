@@ -1,0 +1,50 @@
+//div#fb-root
+script(src="#{player}" type='text/javascript')
+//div#status
+//fb:login-button(show-faces="false" width="1000" max-rows="1" auto_logout_link="true" data-size='large' scope="basic_info,email") Connect To Vechat With Facebook
+//form#loginform(name="input" action="/login" method="post")
+//input#fbid(type="hidden" name="facebookid" value='')
+//div#user_info
+//	P#pname your Profile
+//	img#mypic(src=''  height= '60' margin='auto' display= 'block' )
+script.
+	window.fbAsyncInit = function() {
+		FB.init({
+			appId      : 'your facebook application ID',
+			status     : true, // check login status
+			cookie     : true, // enable cookies to allow the server to access the session
+			xfbml      : true  // parse XFBML
+			});
+
+			FB.Event.subscribe('auth.authResponseChange', function(response) {
+				if (response.status === 'connected') {
+				} else if (response.status === 'not_authorized') {window.location='/logout';} 
+				else {window.location='/logout';}});
+			};
+
+	(function(d){
+		var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+		if (d.getElementById(id)) {return;}
+		js = d.createElement('script'); js.id = id; js.async = true;
+		js.src = "//connect.facebook.net/en_US/all.js";
+		ref.parentNode.insertBefore(js, ref);}(document));
+	
+	setTimeout("checkLogin()",1000);
+	function checkLogin(){
+		FB.getLoginStatus(function(response) {
+			//console.log(response);
+			if (response.status === 'connected') {
+				if(response.authResponse.userID!=#{cuser.id}){
+					alert("you have changed your facebook id\n");
+					window.location='/logout';
+				}else{
+					console.log("check passed");
+				}
+			}else if (response.status === 'unknown') {
+				alert("you have not connected to the facebook");
+				window.location='/logout';
+			}else if (response.status === 'not_authorized') {
+				alert("you have not connected to the vichat");
+				window.location='/logout';
+			}});
+	}

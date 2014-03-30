@@ -1,0 +1,229 @@
+doctype html
+html
+	include includes/header
+	body		
+		include includes/navigation
+		.container
+			//p please fill your information form
+			form#topicinfo(action='/uploadsucc' method="post" role="form")
+				<div class="form-group">	
+				label(for="file-chooser") Video
+				input#file-chooser(type="file")
+				</div>
+				.row
+					<div class="form-group col-md-4">
+					label(for="topictitle") Title
+					input.form-control#topictitle(type='text' value='' placeholder='') 
+					</div>
+				label.checkbox
+					<input id="snsbox" type="checkbox" value="" data-toggle="checkbox"> Receive email notification about this topic</input>
+				input#uname(type="hidden" name="uname" value='') 
+				input#uid(type="hidden" name="uid" value='') 
+				input#uemail(type="hidden" name="uemail" value='')
+				input#ftitle(type="hidden" name="ftitle" value='')
+				input#fname(type="hidden" name="fname" value='')
+				input#fext(type="hidden" name="fext" value='')
+				input#cdate(type="hidden" name="cdate" value=)
+				input#snsnoti(type="hidden" name="snsnoti" value=)
+			button#upload-button(class="btn btn-primary") Create
+			div#file_property
+			div#results
+			div#fb-root
+			include includes/footer
+		
+		script.
+			function GetDateT(){
+				var d,s;
+				d = new Date();
+				s = d.getFullYear();
+				if(d.getMonth()<9){
+					s += "0"+(d.getMonth() + 1);
+					}else{
+					s += (d.getMonth() + 1);
+				}
+				if(d.getDate()<=9){
+					s += "0"+(d.getDate());
+					}else{
+					s += (d.getDate());
+				}
+				if(d.getHours()<=9){
+					s += "0"+(d.getHours());
+					}else{
+					s += (d.getHours());
+				}
+				if(d.getMinutes()<=9){
+					s += "0"+(d.getMinutes());
+					}else{
+					s += (d.getMinutes());
+				}
+				if(d.getSeconds()<=9){
+					s += "0"+(d.getSeconds());
+					}else{
+					s += (d.getSeconds());
+				}
+				return(s);
+			} 
+			(function(d, s, id) {
+				var js, fjs = d.getElementsByTagName(s)[0];
+				if (d.getElementById(id)) return;
+				js = d.createElement(s); js.id = id;
+				js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+				fjs.parentNode.insertBefore(js, fjs);
+			}(document, 'script', 'facebook-jssdk'));
+
+			var fileChooser = document.getElementById('file-chooser');
+			var button = document.getElementById('upload-button');
+			var results = document.getElementById('results');
+			var f_property = document.getElementById('file_property');
+			var profile_pic = document.getElementById('mypic');
+			var bucket;
+			var extension="";
+			var file_uuid = String(Math.uuid(10,16)).replace(/\-/g,"");
+			//alert(file_uuid);
+			var file_name = "";
+			var file_size = 0;
+			window.fbAsyncInit = function() {
+			FB.init({
+			appId      : '275756625921797',
+			status     : true, // check login status
+			cookie     : true, // enable cookies to allow the server to access the session
+			xfbml      : true  // parse XFBML
+			});
+
+			FB.Event.subscribe('auth.authResponseChange', function(response) {
+				if (response.status === 'connected') {
+					FB.getLoginStatus(function(response) {
+						if (response.status === 'connected') {
+							AWS.config.credentials = new AWS.WebIdentityCredentials({
+								RoleArn: 'arn:aws:iam::570847340309:role/vechat_facebook',
+								ProviderId: 'graph.facebook.com', // this is null for Google
+								WebIdentityToken: response.authResponse.accessToken});
+							console.log('You are now logged in.');
+							AWS.config.region = 'us-east-1';
+							AWS.config.apiVersions = {s3: '2006-03-01',elastictranscoder: '2012-09-25'};
+							results.innerHTML="AWS plugin initialization finished";
+							/* make the API call */
+							/*
+							FB.api(
+								"/me/picture",
+								{
+									"height": '150',
+									"width": '150',
+									"type":	'square',
+								},
+								function (response) {
+									if (response && !response.error) {
+										console.log(response.data.url);
+										profile_pic.src=response.data.url;
+									}
+								}
+							);
+							*/
+							FB.api('/me', function(response){
+								console.log(response);
+								//document.getElementById('pname').innerHTML=response.name;
+								document.getElementById('uid').value=response.id;
+								document.getElementById('uname').value=response.name;
+								document.getElementById('uemail').value=response.email;
+							});
+
+						}else if (response.status === 'unknown') {
+							alert("you have not connected to the facebook");
+						}else if (response.status === 'not_authorized') {
+							alert("you have not connected to the vichat");
+						}});
+				} else if (response.status === 'not_authorized') {window.location='/logout';} 
+				else {window.location='/logout';}});
+			};
+
+			// Load the SDK asynchronously
+			(function(d){
+				var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+				if (d.getElementById(id)) {return;}
+				js = d.createElement('script'); js.id = id; js.async = true;
+				js.src = "//connect.facebook.net/en_US/all.js";
+				ref.parentNode.insertBefore(js, ref);
+				}(document));
+
+			fileChooser.addEventListener('change',function(){
+				var file = fileChooser.files[0];
+				console.log(file.name)
+				var message=""
+				if ('name' in file) {
+					message += "name: " + file.name + " ";
+				}else {message += "name: " + file.fileName + " ";}
+				if ('size' in file) {
+					message += "size: " + file.size + " bytes  ";
+					file_size=Number(file.size);
+				}else {message += "size: " + file.fileSize + " bytes  ";
+					file_size=Number(file.size);}
+				if ('mediaType' in file) {
+					message += "type: " + file.mediaType + " ";
+				}
+				console.log(message)
+				f_property.innerHTML = message;
+				//alert("hahahah")
+				results.innerHTML = ""
+			})
+			button.addEventListener('click', function() {
+				var file = fileChooser.files[0];
+				//alert(snsoption.checked);
+				//document.getElementById('cdate').value= (new Date()).getTime();
+				//alert(document.getElementById('cdate').value);
+				if(!file){
+					alert("please select a file");
+					return;
+				}
+				if(file.name.lastIndexOf('.')<0){
+					alert("unknown file type");
+				}else if(file.name.lastIndexOf('.')==file.name.length){
+					alert("unknown file type");}
+				else{
+					extension = file.name.substring(file.name.lastIndexOf('.'),file.name.length);
+					console.log(extension);
+					var s;
+					var extension_list={};
+					(s = extension.match(/mov/i)) ? extension_list.mov = s[0] :
+					(s = extension.match(/mp4/i)) ? extension_list.mp4 = s[0] :
+					(s = extension.match(/[fm]4v/i)) ? extension_list.m4v = s[0] :
+					(s = extension.match(/wmv/i)) ? extension_list.wmv = s[0] :
+					(s = extension.match(/avi/i)) ? extension_list.avi = s[0] :
+					(s = extension.match(/flv/i)) ? extension_list.flv = s[0]:0;
+					if(extension_list.mov || extension_list.mp4 || extension_list.m4v || extension_list.flv || extension_list.avi || extension_list.wmv){
+						file_name = file_uuid+extension;
+						if (file) {
+							if(info_validation()==1){
+								results.innerHTML = '';
+								var params = { Key:file_name, ContentType: file.type, Body: file, ACL: 'public-read'};
+								results.innerHTML = fileChooser.files[0].name + " is being uploading";
+								bucket = new AWS.S3({params: {Bucket: 'vschw'}});
+								bucket.putObject(params, function (err, data) {
+									if (err) {
+										results.innerHTML = 'ERROR: ' + err;
+									} else {
+										var imageTag = "";
+										results.innerHTML = "upload succeed,please wait patience for the transcoding";
+										document.getElementById('cdate').value=GetDateT();
+										document.getElementById('fname').value=file_uuid;
+										document.getElementById('fext').value=extension;
+										document.getElementById('snsnoti').value=document.getElementById('snsbox').checked;
+										document.getElementById('ftitle').value=document.getElementById('topictitle').value;
+										document.getElementById('topicinfo').submit();
+									}
+								});
+							}else{alert("topic name cannot be null or the file is too large, we only support file smaller than 200MB");}
+						}else {results.innerHTML = 'Nothing to upload.';}
+					}else{alert("unsupported file type");}}}, false);
+			function info_validation(){
+				var title = document.getElementById('topictitle');
+				if(title.value.replace(/[\s]*/,'')==''){
+					return 0;
+				}
+				if(title.value==''){
+					return 0;
+				}
+				if(file_size>=200000000)
+					return 0;
+				else
+					return 1;
+			}

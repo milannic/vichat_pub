@@ -1,0 +1,42 @@
+form#dreply(name="input" action="/replydelete" method="post")
+	input#drtopicid(type="hidden" name="tid" value='')
+	input#drreplyid(type="hidden" name="rid" value='')
+	input#drcuser(type="hidden" name="cuser",value='')
+
+form#dtopic(name="input" action="/removetopic" method="post")
+	input#dttopicname(type="hidden" name="tname" value='')
+	input#dttopicid(type="hidden" name="tid" value='')
+	input#dtcuser(type="hidden" name="cuser",value='')
+	input#dtsns(type="hidden" name="sns",value='')
+script.
+	function delreply(tid,rid){
+		if(confirm("you cannot recover any deleted file,continue?")){
+			FB.api("/me",function (response) {
+				if (response && !response.error) {
+					console.log(response);
+					document.getElementById('drtopicid').value=tid;
+					document.getElementById('drreplyid').value=rid;
+					document.getElementById('drcuser').value=response.id;
+					document.getElementById('dreply').submit();
+				}
+			});
+		}else{
+			alert("Cherish Your Life :)");
+					}
+				}
+				function deltopic(tid,tname,sns){
+					if(confirm("you cannot recover any deleted file,continue?")){
+						FB.api("/me",function (response) {
+							if (response && !response.error) {
+								console.log(response);
+								document.getElementById('dttopicid').value=tid;
+								document.getElementById('dttopicname').value=tname;
+								document.getElementById('dtsns').value=sns;
+								document.getElementById('dtcuser').value=response.id;
+								document.getElementById('dtopic').submit();
+							}
+						});
+					}else{
+						alert("Cherish Your Life :)");
+					}
+				}

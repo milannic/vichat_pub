@@ -1,0 +1,79 @@
+doctype html
+html
+	include includes/header	
+	body
+		include includes/navigation
+		.container.container-inner
+			each element,index in topics 
+				-if(index % 3 == 0){
+					<div class = "row">
+				-}
+				<div class="col-md-4">
+				-var name= element.title.S
+				-name = name.substr(0,8)+"...";
+				-if(element.title.S.length>10)
+					h2 <a href="/t/#{element.key.S}"> #{name} </a>
+				-else
+					h2 <a href="/t/#{element.key.S}"> #{element.title.S} </a>
+				div(id="topic#{index}" style="display:inline float:left")
+				script.
+					jwplayer('topic#{index}').setup({
+						width: "300",
+						height: "168",
+						primary: "html5",
+						playlist: [{
+							image: "#{bbucket}#{element.key.S}-00001.png",
+							sources: [
+								{ file: "#{bucket}#{element.key.S}.mp4",label: "origin"},
+								{ file: "#{bbucket}#{element.key.S}.mp4",label: "backup"},
+							],
+							title: "#{element.title.S}"
+						}]
+					});
+				ul.list-inline
+					li <img id="topic#{index}profile" src=""></img>
+					li
+						ul.list-unstyled
+							li by <a href="/u/#{element.userID.S}"> #{element.username.S} </a>
+							li 
+								ul.list-inline
+									-if(element.replycnt.N < 2) {
+										li #{element.replycnt.N} reply
+									-}
+									-else {
+										li #{element.replycnt.N} replies
+									-}
+									li #{element.time.N[1]}/#{element.time.N[2]}/#{element.time.N[0]} #{element.time.N[3]}:#{element.time.N[4]}:#{element.time.N[5]}
+					script.
+						setTimeout("showProfilePic#{index}()",#{index}*10+1000);
+						function showProfilePic#{index} (){
+							FB.api(
+								"/#{element.userID.S}/picture",
+									{
+										"height": '30',
+										"width": '30',
+										"type":	'square',
+									},
+									function (picresponse) {
+										if (picresponse && !picresponse.error) {
+											var fbimg = document.getElementById('topic#{index}profile');
+											fbimg.src=picresponse.data.url;
+										}
+							
+							});
+						}
+				//if cuser.id==element.userID.S
+				//	input(id="topic#{index}tid" type="hidden" value='#{element.key.S}')
+				//	input(id="topic#{index}tname" type="hidden" value='#{element.title.S}')
+				//	input(id="topic#{index}sns" type="hidden" value='#{element.sns.S}')
+				//	button(class="btn btn-default pull-right" onclick='deltopic(document.getElementById(\'topic#{index}tid\').value,document.getElementById(\'topic#{index}tname\').value,document.getElementById(\'topic#{index}sns\').value)') Delete
+				//
+				</div>
+				-if(index % 3 == 2) {
+					</div>
+				-}
+			-if(topics.length % 3 != 0) {
+				</div>
+			-}
+			//include includes/delete
+			include includes/footer
